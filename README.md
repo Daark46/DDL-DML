@@ -55,6 +55,74 @@ ALTER USER 'sys_test'@'localhost' IDENTIFIED WITH mysql_native_password BY 'pass
 
 ### Ответ 1
 
+1.1 MySQL версии 8.0.32-debian с помощью Docker
+```
+docker run -dp 3306:3306 \
+--name netology-mysql \
+-v mysql:/var/lib/mysql \
+-e MYSQL_ROOT_PASSWORD=netology \
+mysql:8.0.32-debian
+```
+1.2. Создайте учётную запись sys_temp.
+```
+docker exec -it netology-mysql mysql -uroot -p
+
+CREATE USER 'sys_temp'@'localhost' IDENTIFIED BY 'netology';
+```
+
+1.3. Запрос на получение списка пользователей в базе данных
+```
+SELECT user FROM mysql.user;
+```
+![alt text](https://github.com/Daark46/DDL-DML/blob/main/1.3.png)
+
+1.4.Все права для пользователя sys_temp
+```
+GRANT ALL PRIVILEGES ON mysql . * TO 'sys_temp'@'localhost';
+```
+1.5. Запрос на получение списка прав для пользователя sys_temp
+```
+SHOW GRANTS FOR 'sys_temp'@'localhost';
+```
+![alt text](https://github.com/Daark46/DDL-DML/blob/main/1.5.png)
+
+1.6. Переподключение к базе данных от имени sys_temp
+```
+ALTER USER 'sys_temp'@'localhost' IDENTIFIED WITH mysql_native_password BY 'netology';
+
+SELECT user();
+```
+По ссылке https://downloads.mysql.com/docs/sakila-db.zip скачайте дамп базы данных
+
+```
+wget https://downloads.mysql.com/docs/sakila-db.zip
+
+unzip sakila-db.zip
+```
+
+1.7. Восстановление дампа в базу данных
+```
+docker cp ./sakila-db/sakila-schema.sql netology-mysql:/tmp
+
+docker cp ./sakila-db/sakila-data.sql netology-mysql:/tmp
+
+docker exec -it netology-mysql bash
+
+mysql -u root -p sakila < /tmp/sakila-schema.sql 
+
+mysql -u root -p sakila < /tmp/sakila-data.sql
+                                          
+exit
+```
+1.8. При работе в IDE сформируйте ER-диаграмму получившейся базы данных. При работе в командной строке используйте команду для получения всех таблиц базы данных. (скриншот)
+```
+mysql> SHOW DATABASES;
+
+mysql> USE sakila
+
+mysql> SHOW TABLES;
+```
+![alt text](https://github.com/Daark46/DDL-DML/blob/main/1.8.png)
 
 ### Задание 2
 Составьте таблицу, используя любой текстовый редактор или Excel, в которой должно быть два столбца: в первом должны быть названия таблиц восстановленной базы, во втором названия первичных ключей этих таблиц. Пример: (скриншот/текст)
@@ -65,5 +133,9 @@ customer         | customer_id
 ```
 
 ### Ответ 2
+```
+mysql>  SELECT TABLE_NAME, COLUMN_NAME FROM INFORMATION_SCHEMA.key_column_usage WHERE table_schema = 'sakila' AND CONSTRAINT_NAME = 'PRIMARY';
+```
+![alt text](https://github.com/Daark46/DDL-DML/blob/main/2.png)
 
 
